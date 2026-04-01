@@ -1,14 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import signal
 
 
 
-def slowLineHoughTransform(image):
-    img = plt.imread(image)
-    if len(img.shape) == 3:
-        img = img[:, :, 0]
-    h,w = img.shape
-    
+def slowLineHoughTransform(imageArray):
+    h,w = imageArray.shape
     rho_max = (int)(np.sqrt((h/2)**2 + (w/2)**2))
     H=np.zeros((2*rho_max,180))
     
@@ -16,7 +13,7 @@ def slowLineHoughTransform(image):
         for j in range(w):
             x = j-(int)(w/2)
             y = h-i-(int)(h/2)
-            if (img[i][j]>0):
+            if (imageArray[i][j]>0):
                 for theta in range(180):
                     theta_rad = np.deg2rad(theta)
                     rho = (int)(x*np.cos(theta_rad) + y*np.sin(theta_rad))
@@ -24,14 +21,9 @@ def slowLineHoughTransform(image):
                     H[rho_index][theta] += 1
     return H
 
-def vectorizedLineHoughTransform(image):
-    img = plt.imread(image)
-    if len(img.shape) == 3:
-        img = img[:, :, 0]
-
-    h, w = img.shape
-    
-    ys, xs = np.nonzero(img > 0)
+def vectorizedLineHoughTransform(imageArray):
+    h, w = imageArray.shape
+    ys, xs = np.nonzero(imageArray > 0)
     x = xs - w // 2
     y = h - ys - h // 2
     
@@ -79,13 +71,9 @@ def bresenhamCircle(array, p, radius):
     return array
     
     
-def CHT(image):
-    img = plt.imread(image)
-    if len(img.shape) == 3:
-        img = img[:, :, 0]
-
-    h, w = img.shape
-    ys, xs = np.nonzero(img > 0)
+def CHT(imageArray):
+    h, w = imageArray.shape
+    ys, xs = np.nonzero(imageArray > 0)
     points = list(zip(xs, ys))
     rho_max = int(np.sqrt((h/2)**2 + (w/2)**2))
 
@@ -111,13 +99,9 @@ def lessAccurateCHT(image, pas):
             bresenhamCircle(H[rho], point, rho)
     return H
 
-def fixedCHT(image, rho):
-    img = plt.imread(image)
-    if len(img.shape) == 3:
-        img = img[:, :, 0]
-
-    h, w = img.shape
-    ys, xs = np.nonzero(img > 0)
+def fixedCHT(imageArray, rho):
+    h, w = imageArray.shape
+    ys, xs = np.nonzero(imageArray > 0)
     points = list(zip(xs, ys))
     
     H = np.zeros((h, w), dtype=np.uint8)
@@ -125,21 +109,25 @@ def fixedCHT(image, rho):
         bresenhamCircle(H, point, rho)
     return H
 
-def findLocalExtrema(array):
-    h,w = array.shape
-    max = 0
-    #index = (0,0)
-    for i in range(h):
-        for j in range(w):
-            if (array[i][j]>max):
-                max = array[i][j]
-                #index = (i,j)
-    return np.nonzero(array>max*0.8)
+#really bad
+def findLocalExtrema1D(array, nbTry, maxTime):
+    startPoints = np.linspace(1, len(array)-2, nbTry, dtype=int)
+    endPoints = set()
+    for point in startPoints:
+        time = 0
+        while(time<maxTime):
+            if (array[point-1]>array[point] and point>1):
+                point-=1
+            elif (array[point+1]>array[point] and point<len(array)-2):
+                point+=1
+            time +=1
+        endPoints.add(point)
+    return endPoints
 
+def findLocalExtrema(array):
+    return signal.find_peaks(array);
 
 def findLines(inputHough):
-    if len(inputHough.shape) == 3:
-        inputHough = inputHough[:, :, 0]
     indexList = findLocalExtrema(inputHough)
     lines = []
     for index in indexList:
@@ -148,8 +136,9 @@ def findLines(inputHough):
         lines.append((p1,p2))
     return lines
 
-matrix = fixedCHT("../testImage/cannyMoreEuros.png", 9)
-plt.imshow(matrix, cmap='hot')
-plt.title('Accumulator for radius {rho}')
-plt.colorbar()
-plt.show()
+def findCircle(inputHough, rho):
+    indexList = findLocalExtrema(inputHough)
+    circles = []
+    for index in indexList:
+        circles.append((index,rho))
+    return circles

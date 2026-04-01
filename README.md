@@ -5,7 +5,7 @@ Currently working on coin detection.
 ## Coin Detection
 The coin detection process consist of the following steps :
   1. Edge detection - isolate the edges and output a binary image
-  2. Image compression - compressing the image allow for better performances
+  2. Image downscaling - downscaling the image allows for better performances
   3. Hough transform - transform the image in a parameter space to identify shapes
 
 ### Edge Detection
