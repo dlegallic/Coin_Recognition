@@ -1,9 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import signal
 
-
-
+#Naive implementation of the Hough transform for lines
+#imageArray : input image in the form of an array
 def slowLineHoughTransform(imageArray):
     h,w = imageArray.shape
     rho_max = (int)(np.sqrt((h/2)**2 + (w/2)**2))
@@ -21,6 +20,9 @@ def slowLineHoughTransform(imageArray):
                     H[rho_index][theta] += 1
     return H
 
+
+#A faster version of the Hough transform for lines, using numpy arrays
+#imageArray : input image in the form of a np.array
 def vectorizedLineHoughTransform(imageArray):
     h, w = imageArray.shape
     ys, xs = np.nonzero(imageArray > 0)
@@ -41,13 +43,18 @@ def vectorizedLineHoughTransform(imageArray):
     np.add.at(H, (rho_idx, theta_idx), 1)
     return H
 
-def bresenhamCircle(array, p, radius):
-    h = len(array)
-    w = len(array[0])
+
+#Draws a circle with a slightly modified bresenham algorithm
+#imageArray : input image in the form of a np.array
+#p : circle center point, [x,y] with x and y integers
+#radius : the radius of the circle, integer
+def bresenhamCircle(imageArray, p, radius): 
+    h = len(imageArray)
+    w = len(imageArray[0])
 
     def plot(x, y):
         if 0 <= x < w and 0 <= y < h:
-            array[y][x] += 1
+            imageArray[y, x] += 1
 
     x = 0
     y = radius
@@ -68,37 +75,52 @@ def bresenhamCircle(array, p, radius):
             m -= 8 * y
         x += 1
         m += 8 * x + 4
-    return array
+    return imageArray
     
     
-def CHT(imageArray):
+#True CHT using bresenham and not optimized
+def slowCHT(imageArray):
     h, w = imageArray.shape
     ys, xs = np.nonzero(imageArray > 0)
     points = list(zip(xs, ys))
     rho_max = int(np.sqrt((h/2)**2 + (w/2)**2))
 
-    H = np.zeros((rho_max, h, w), dtype=np.uint8)
+    H = np.zeros((h, w, rho_max), dtype=np.uint16)
     for rho in range (rho_max):
         for point in points:
-            bresenhamCircle(H[rho], point, rho)
+            bresenhamCircle(H[:, :, rho], point, rho)
     return H
 
-def lessAccurateCHT(image, pas):
-    img = plt.imread(image)
-    if len(img.shape) == 3:
-        img = img[:, :, 0]
+#Faster and vectorized CHT dumping the inefficient brasenham circle drawing
+def fastCHT(imageArray, radii):
+    h, w = imageArray.shape
+    ys, xs = np.nonzero(imageArray > 0)
+    H = np.zeros((h, w, len(radii)), dtype=np.uint32)
 
-    h, w = img.shape
-    ys, xs = np.nonzero(img > 0)
-    points = list(zip(xs, ys))
-    rho_max = int(np.sqrt((h/2)**2 + (w/2)**2))
-
-    H = np.zeros((rho_max//pas, h, w), dtype=np.uint8)
-    for rho in range (0, rho_max, pas):
-        for point in points:
-            bresenhamCircle(H[rho], point, rho)
+    angles = np.arange(0, 360) * np.pi / 180
+    cos_a = np.cos(angles)
+    sin_a = np.sin(angles)
+    
+    for r_idx, r in enumerate(radii):
+        for x, y in zip(xs, ys):
+            cx = x - r * cos_a
+            cy = y - r * sin_a
+    
+            cx = cx.astype(np.uint32)
+            cy = cy.astype(np.uint32)
+    
+            valid = (
+                (cx >= 0) & (cx < w) &
+                (cy >= 0) & (cy < h)
+            )
+            cx = cx[valid]
+            cy = cy[valid]
+            H[cy, cx, r_idx] += 1
     return H
-
+            
+            
+            
+#CHT for a give radius
 def fixedCHT(imageArray, rho):
     h, w = imageArray.shape
     ys, xs = np.nonzero(imageArray > 0)
@@ -109,6 +131,9 @@ def fixedCHT(imageArray, rho):
         bresenhamCircle(H, point, rho)
     return H
 
+
+#==============================================================#
+#Below are unfinished, inefficient and terrible ideas
 #really bad
 def findLocalExtrema1D(array, nbTry, maxTime):
     startPoints = np.linspace(1, len(array)-2, nbTry, dtype=int)
@@ -124,8 +149,10 @@ def findLocalExtrema1D(array, nbTry, maxTime):
         endPoints.add(point)
     return endPoints
 
+
 def findLocalExtrema(array):
     return signal.find_peaks(array);
+
 
 def findLines(inputHough):
     indexList = findLocalExtrema(inputHough)
@@ -135,6 +162,7 @@ def findLines(inputHough):
         p2 = ((int)(index[1]/np.cos(np.deg2rad(index[0]))), 0)
         lines.append((p1,p2))
     return lines
+
 
 def findCircle(inputHough, rho):
     indexList = findLocalExtrema(inputHough)
