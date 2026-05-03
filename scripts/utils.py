@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
+from PIL import Image, ImageOps
 
 def downscale(imageArray, size):
     factor = 1
@@ -22,52 +22,39 @@ def threshold(imageArray, threshold):
 
 def imgToArray(image):
     #Load the image and convert it to a grayscale
-    img = plt.imread(image)
+    img = Image.open(image)
+    img = ImageOps.exif_transpose(img)  #some images are rotated
+    img = np.array(img)
     gray_img = np.round(0.299 * img[:, :, 0] +
                         0.587 * img[:, :, 1] +
                         0.114 * img[:, :, 2]).astype(np.uint8) 
     return gray_img
+
+#Failed attempt
+def imgToArrayByVar(image):
+    #Load the image and convert it to a grayscale
+    img = Image.open(image)
+    img = ImageOps.exif_transpose(img)  #some images are rotated
+    img = np.array(img)
+    r = img[:,:,0]
+    g = img[:,:,1]
+    #There's no blue shade on coin (assumption)
+    variances = [r.var(), g.var()]/(r.var()+g.var())
+    gray_img = np.round(variances[0] * img[:, :, 0] +
+                        variances[1] * img[:, :, 1] +
+                        0 * img[:, :, 2]).astype(np.uint8) 
+    return gray_img
+
+
 
 def normalizeImg(imageArray):
     max_value = imageArray.max()
     normalizedImgArray = ((imageArray/max_value)*255)
     return normalizedImgArray.astype(int)
 
-
-def normalizeAcc(acc, radii):
-    #Normalize the accumulator along the r axis to avoid bias toward higher radius
-    norm = 1.0/(2 * np.pi * radii +1e-8)
-    acc = acc * norm[None, None, :]
-    return acc
-
-
-#Greedy NMS in 3D accumulator. 
-#Returns a list of circles [x,y,r_idx,score], be careful to convert r_idx to r
-def nms3d(houghSpace, xy_radius=10, r_radius=20, threshold=1):
-    acc = houghSpace.copy()
-    H, W, R = acc.shape
-    circles = []
-    while True:
-        idx = np.unravel_index(np.argmax(acc), acc.shape)
-        x, y, r_idx = idx
-        score = acc[x, y, r_idx]
-
-        #threshold to select circles
-        if score <= threshold:
-            break
-
-        circles.append((x, y, r_idx, score))
-
-        # Select the intervals in each dimension that will be zeroed out
-        x0 = max(0, x - xy_radius)
-        x1 = min(H, x + xy_radius + 1)
-
-        y0 = max(0, y - xy_radius)
-        y1 = min(W, y + xy_radius + 1)
-
-        r0 = max(0, r_idx - r_radius)
-        r1 = min(R, r_idx + r_radius + 1)
-
-        # zero out neighborhood
-        acc[x0:x1, y0:y1, r0:r1] = 0
-    return np.array(circles)
+def histEQ(imageArray):
+    hist, bins = np.histogram(imageArray.flatten(), 256, [0,256])
+    cdf = hist.cumsum()
+    cdf_normalized = cdf * 255 / cdf[-1]
+    img_eq = cdf_normalized[imageArray].astype('uint16')
+    return img_eq
