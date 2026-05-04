@@ -1,10 +1,9 @@
 import numpy as np
-import random
-import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.ndimage import gaussian_filter
 
 #Fonction differentiable en tout point, représentée par un array
+#UNUSED
 def gradientDescent1D(functionArray, learningRate, steps):
     a  = len(functionArray)/2
     for n in range(steps):
@@ -18,7 +17,7 @@ def gradientDescent1D(functionArray, learningRate, steps):
         a = max(1, min(len(functionArray) - 2, a))
     return(int)(a)
 
-
+#UNUSED
 def hessian(imageArray):
     Mx = [[-1, 0, 1],
           [-1, 0, 1],

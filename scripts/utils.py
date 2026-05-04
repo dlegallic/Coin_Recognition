@@ -2,6 +2,8 @@ import numpy as np
 from scipy import signal
 from PIL import Image, ImageOps
 
+#Downscales an image by removing even columns and lines
+#Mandatory for speeding up the manual process
 def downscale(imageArray, size):
     factor = 1
     
@@ -17,20 +19,26 @@ def downscale(imageArray, size):
     
     return (filteredImg, factor)
 
+#A standard threshold
 def threshold(imageArray, threshold):
     return np.where(imageArray>threshold, 255, 0)
 
+#Loads and convert an image to a np.array of its grayscale 
 def imgToArray(image):
     #Load the image and convert it to a grayscale
-    img = Image.open(image)
-    img = ImageOps.exif_transpose(img)  #some images are rotated
+    try:
+        img = Image.open(image)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Image not found: '{image}'. Please check the path.")
+    img = ImageOps.exif_transpose(img)  #Rotates images if needed
     img = np.array(img)
     gray_img = np.round(0.299 * img[:, :, 0] +
                         0.587 * img[:, :, 1] +
                         0.114 * img[:, :, 2]).astype(np.uint8) 
     return gray_img
 
-#Failed attempt
+#Failed attempt to prioritise the color where edges are the clearest.
+#It assumed coin are not blue -> not important
 def imgToArrayByVar(image):
     #Load the image and convert it to a grayscale
     img = Image.open(image)
@@ -45,13 +53,13 @@ def imgToArrayByVar(image):
                         0 * img[:, :, 2]).astype(np.uint8) 
     return gray_img
 
-
-
+#Normalize an imageArray's values as integer between 0 and 255
 def normalizeImg(imageArray):
     max_value = imageArray.max()
     normalizedImgArray = ((imageArray/max_value)*255)
     return normalizedImgArray.astype(int)
 
+#Equalize the histogramm
 def histEQ(imageArray):
     hist, bins = np.histogram(imageArray.flatten(), 256, [0,256])
     cdf = hist.cumsum()

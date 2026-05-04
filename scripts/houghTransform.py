@@ -119,8 +119,7 @@ def fastCHT(imageArray, radii):
     return H
             
             
-            
-#CHT for a give radius
+#CHT for a given radius
 def fixedCHT(imageArray, rho):
     h, w = imageArray.shape
     ys, xs = np.nonzero(imageArray > 0)
@@ -134,7 +133,7 @@ def fixedCHT(imageArray, rho):
 
 #==============================================================#
 #Below are unfinished, inefficient and terrible ideas
-#really bad
+#The actual method is a NMS and can be found in utils
 def findLocalExtrema1D(array, nbTry, maxTime):
     startPoints = np.linspace(1, len(array)-2, nbTry, dtype=int)
     endPoints = set()
