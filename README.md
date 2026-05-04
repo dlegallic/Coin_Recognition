@@ -24,9 +24,53 @@ This algorithm is neither the most accurate nor the fastest, but is easy to impl
 
 ## Evaluation of our process
 In order to evaluate the performances of our process, we use a labeled test dataset, on which we train, and a labeled validation dataset, reserved for the final evaluation.<br>
-The implemented metric is a simple Intersection over Union (IoU) that will tell us how accurately our models predicts coins.<br>
-Other metrics, like the distance between predicted and actual number of coins could be implemented in the future.<br>
+The implemented metric is a simple Intersection over Union (IoU) that will tell us how accurately our models predicts coins.
+Other metrics, like the distance between predicted and actual number of coins could be implemented in the future.
 Furthermore, we use a simple openCV process similar to our own to compare their speed and accuracy.
 
 # How to Use
+## Installation
+Install dependencies using:
 
+```terminal
+pip install -r requirements.txt
+```
+## Running the program
+From the scripts folder, run:
+```python3
+python3 main.py --full
+```
+This will execute the program with default settings:
+- Slow `manual` Python implementation of Hough Transform
+- Runs on the `test` dataset
+
+  
+## Options
+### Change implementation
+To use OpenCV implementation, simply run :
+```python3
+python3 main.py --full -algo 'opencv'
+```
+
+### Change dataset
+To run on the validation dataset, run :
+```python3
+python3 main.py --full -dataset 'validation'
+```
+### See detected coins
+If you want to see each image's detected coins you can run :
+```python3
+python3 main.py --full -graphic
+```
+### Run on a single file
+If you only wish to detect coins on a single image, run:
+```python3
+python3 main.py --file $file_path$
+```
+Note that in this mode, the resulting image will obviously always be shown. 
+
+### Notes
+For more details, and option settings, run :
+```python3
+python3 main.py --help
+```
