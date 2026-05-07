@@ -30,13 +30,13 @@ Furthermore, we use a simple openCV process similar to our own to compare their 
 
 # How to Use
 ## Installation
-Install dependencies using:
+From the **root** folder, install dependencies using:
 
 ```terminal
 pip install -r requirements.txt
 ```
 ## Running the program
-From the scripts folder, run:
+From the **scripts** folder, run:
 ```python3
 python3 main.py --full
 ```
@@ -49,25 +49,30 @@ This will execute the program with default settings:
 ### Change implementation
 To use OpenCV implementation, simply run :
 ```python3
-python3 main.py --full -algo 'opencv'
+python3 main.py --full --algo 'opencv'
 ```
 
 ### Change dataset
 To run on the validation dataset, run :
 ```python3
-python3 main.py --full -dataset 'validation'
+python3 main.py --full --dataset 'validation'
 ```
 ### See detected coins
 If you want to see each image's detected coins you can run :
 ```python3
-python3 main.py --full -graphic
+python3 main.py --full --graphic
 ```
 ### Run on a single file
 If you only wish to detect coins on a single image, run:
 ```python3
 python3 main.py --file $file_path$
 ```
-Note that in this mode, the resulting image will obviously always be shown. 
+Note that in this mode, the resulting image will obviously always be shown. <br>
+Path are relative to the scripts folder. For an image in the testImage folder, please run :
+
+```python3
+python3 main.py --file '../testImage/yourImageName.png'
+```
 
 ### Notes
 For more details, and option settings, run :
